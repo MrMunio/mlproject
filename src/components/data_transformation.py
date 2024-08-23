@@ -1,3 +1,4 @@
+# data_transformation.py
 import sys
 from dataclasses import dataclass
 
@@ -43,8 +44,8 @@ class DataTransformation:
             logging.info(f"pipeline created for numerical columns {numerical_columns}")
             cat_pipeline=Pipeline(steps=[
                 ('imputer',SimpleImputer(strategy="most_frequent")),
-                ("one_hot_encoder",OneHotEncoder()),
-                ("scaler",StandardScaler())
+                ("one_hot_encoder",OneHotEncoder(drop='first')), # drop="first" tackles dummy variable trap
+                ("scaler",StandardScaler(with_mean=False))# Set with_mean=False for sparse data
             ])
             logging.info(f"pipeline created for numerical columns {categorical_columns}")
             preprocessor=ColumnTransformer(
@@ -70,6 +71,25 @@ class DataTransformation:
                 obj=preprocessing_obj
             )
             logging.info("preprocessing object saved")
+            x_train=train_df.drop(columns=[target_column_name],axis=1)
+            y_train=train_df[target_column_name]
+            x_test=test_df.drop(columns=[target_column_name],axis=1)
+            y_test=test_df[target_column_name]
+            logging.info("Applying preprocessing object on training df and testing df.")
+            x_train_transformed=preprocessing_obj.fit_transform(x_train)
+            x_test_transformed=preprocessing_obj.transform(x_test)
+            train_arr=np.c_[
+                x_train_transformed, np.array(y_train)
+            ]
+            test_arr=np.c_[
+                x_test_transformed,np.array(y_test)
+            ]
+            logging.info("successfully applied preprocessing object on training df and testing df.")
+            return(
+                train_arr,
+                test_arr,
+                self.DataTransformationConfig.preprocessor_obj_file_path
+            )
 
         except Exception as e:
             raise CustomException(e,sys)
