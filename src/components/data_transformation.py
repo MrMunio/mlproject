@@ -23,7 +23,7 @@ class DataTransformationConfig:
 class DataTransformation:
     DataTransformationConfig=DataTransformationConfig()
     def get_data_transformer_object(self):
-        
+
         '''
         this function is responsible for data transformation for various types of data
         '''
@@ -66,10 +66,6 @@ class DataTransformation:
             logging.info("obtaining preprocessing obj")
             preprocessing_obj=self.get_data_transformer_object()
             target_column_name="math_score"
-            save_obj(
-                file_path=self.DataTransformationConfig.preprocessor_obj_file_path,
-                obj=preprocessing_obj
-            )
             logging.info("preprocessing object saved")
             x_train=train_df.drop(columns=[target_column_name],axis=1)
             y_train=train_df[target_column_name]
@@ -78,6 +74,11 @@ class DataTransformation:
             logging.info("Applying preprocessing object on training df and testing df.")
             x_train_transformed=preprocessing_obj.fit_transform(x_train)
             x_test_transformed=preprocessing_obj.transform(x_test)
+            # save preprocessor after it got trained on training set
+            save_obj(
+                file_path=self.DataTransformationConfig.preprocessor_obj_file_path,
+                obj=preprocessing_obj
+            )
             train_arr=np.c_[
                 x_train_transformed, np.array(y_train)
             ]
